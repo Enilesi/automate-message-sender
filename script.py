@@ -22,11 +22,16 @@ creds = ServiceAccountCredentials.from_json_keyfile_name('credentials.json', sco
 client = gspread.authorize(creds)
 sheet = client.open("WhatsAppContacts").sheet1
 
-phone_numbers = [
-    cell.strip().replace("+", "").replace(" ", "")
-    for cell in sheet.col_values(1)
-    if cell.strip()
-]
+formatted_numbers = []
+for cell in sheet.col_values(1):
+    num = cell.strip().replace("+", "").replace(" ", "")
+    if not num:
+        continue
+    if num.startswith("0"):
+        num = num[1:]
+    formatted = f"+40 {num[0:2]} {num[2]} {num[3:6]} {num[6:]}"
+    formatted_numbers.append(formatted)
+
 
 
 with open("message.txt", "r", encoding="utf-8") as f:
@@ -49,8 +54,8 @@ try:
 except TimeoutException:
     pass
 
-for number in phone_numbers:
-    print(f"🕿  → +{number}")
+for number in formatted_numbers:
+    print(f"🕿  → {number}")
     chat_url = f"https://web.whatsapp.com/send?phone={number}&text={encoded}"
     driver.get(chat_url)
 
@@ -83,5 +88,5 @@ for number in phone_numbers:
 
     time.sleep(3)
 
-print("🎉 All done.")
+print("All done.")
 driver.quit()
